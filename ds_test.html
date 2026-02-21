@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Science with Python - 考前衝刺特訓</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
+        .btn-option { transition: all 0.2s; }
+        .btn-option:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .correct { background-color: #10b981 !important; color: white !important; border-color: #10b981 !important; }
+        .wrong { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
+        .disabled { opacity: 0.7; cursor: not-allowed; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="app" class="w-full max-w-2xl bg-white rounded-xl shadow-xl overflow-hidden">
+        <!-- 首頁 -->
+        <div id="home-screen" class="p-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Data Science 考前衝刺特訓 🚀</h1>
+            <p class="text-gray-600 mb-8">根據你的 PDF 筆記精煉而成的 MC 題庫。每次選項隨機打亂，反覆練習直到滿分！</p>
+            <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 shadow-lg">
+                開始測驗 (Start Quiz)
+            </button>
+        </div>
+
+        <!-- 測驗頁面 -->
+        <div id="quiz-screen" class="hidden p-6 md:p-8">
+            <div class="flex justify-between items-center mb-6 text-sm font-semibold text-gray-500">
+                <span id="progress-text">Question 1 / 35</span>
+                <span id="score-text" class="text-blue-600">Score: 0</span>
+            </div>
+            
+            <div class="mb-8">
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold text-gray-800 leading-snug">Question text goes here?</h2>
+            </div>
+
+            <div id="options-container" class="space-y-3">
+                <!-- 選項按鈕會由 JS 動態生成 -->
+            </div>
+
+            <div id="feedback-container" class="hidden mt-6 p-4 rounded-lg">
+                <p id="feedback-text" class="font-bold text-lg mb-1"></p>
+                <p id="explanation-text" class="text-sm text-gray-700"></p>
+            </div>
+
+            <div class="mt-6 text-right">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                    下一題 (Next) ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- 結果頁面 -->
+        <div id="result-screen" class="hidden p-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">測驗完成！🎉</h2>
+            <p class="text-gray-600 mb-6">你的最終成績：</p>
+            <div class="text-5xl font-black text-blue-600 mb-8" id="final-score">0 / 35</div>
+            <p id="result-message" class="text-lg mb-8 font-medium text-gray-700"></p>
+            <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 shadow-lg">
+                重新挑戰 (Try Again)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 題庫 (根據 PDF 內容生成)
+        const quizData = [
+            // Python Basics
+            { q: "What is the output of `3 // 2` in Python?", correct: "1", wrong: ["1.5", "2", "0"], exp: "// is Integer Division. It drops the decimal." },
+            { q: "What does the Modulus operator (`4 % 2`) return?", correct: "0", wrong: ["2", "0.5", "8"], exp: "% returns the remainder of the division." },
+            { q: "Which of the following is a valid variable name in Python?", correct: "value2", wrong: ["2value", "value-2", "value 2"], exp: "Variables cannot start with a number or contain spaces/hyphens." },
+            { q: "What does `type('hello world')` return?", correct: "<class 'str'>", wrong: ["<class 'string'>", "<class 'text'>", "<class 'char'>"], exp: "Text in Python is of type 'str' (string)." },
+            { q: "Which data structure uses curly braces like `{1: 'a', 2: 'b'}`?", correct: "Dictionary", wrong: ["List", "Tuple", "Set"], exp: "Dictionaries use key-value pairs inside {}." },
+            { q: "In Logical Operators, when does `and` return True?", correct: "Only if both conditions are true", wrong: ["If at least one condition is true", "If neither condition is true", "If the first condition is true"], exp: "`and` requires ALL conditions to be True." },
+            
+            // Pandas
+            { q: "Which library is mainly used for tabular data management?", correct: "pandas", wrong: ["scikit-learn", "matplotlib", "plotly"], exp: "Pandas is the standard for tabular data (DataFrames)." },
+            { q: "How do you read a CSV file in pandas?", correct: "pd.read_csv('filename.csv')", wrong: ["pd.open_csv('filename.csv')", "pd.read('filename.csv')", "pd.load_csv('filename.csv')"], exp: "The correct method is pd.read_csv()." },
+            { q: "How do you remove missing rows in a DataFrame?", correct: "df.dropna()", wrong: ["df.fillna()", "df.remove_na()", "df.drop()"], exp: "dropna() drops rows with missing values. fillna() fills them." },
+            { q: "What does `df.shape` give you?", correct: "(rows, columns)", wrong: ["(columns, rows)", "Total number of cells", "Data types of columns"], exp: "shape returns a tuple of (number of rows, number of columns)." },
+            { q: "How do you filter rows where Age is greater than 80?", correct: "df.loc[df['Age'] > 80]", wrong: ["df.filter(Age > 80)", "df['Age'] > 80", "df.where(Age > 80)"], exp: "Use df.loc[] with the condition inside." },
+            { q: "Which method fills NA (missing) values with 0?", correct: "df.fillna(0)", wrong: ["df.dropna(0)", "df.replace_na(0)", "df.insert(0)"], exp: "fillna() is used to replace missing values." },
+            { q: "What does `df.describe()` do?", correct: "Gives numeric summary", wrong: ["Shows data types", "Shows the first 5 rows", "Lists column names"], exp: "describe() provides stats like mean, min, max, etc." },
+            { q: "How do you select multiple columns 'A' and 'B'?", correct: "df[['A','B']]", wrong: ["df['A','B']", "df.select('A','B')", "df['A'] + df['B']"], exp: "You need double brackets [[]] to select multiple columns." },
+
+            // Data Visualization
+            { q: "Which chart is best to show the distribution of numerical data?", correct: "Histogram", wrong: ["Bar Chart", "Pie Chart", "Line Chart"], exp: "Histograms show distributions, Bar charts compare categories." },
+            { q: "Which chart is best to show change over time?", correct: "Line Chart", wrong: ["Scatter Plot", "Box Plot", "Pie Chart"], exp: "Line charts are standard for time-series data." },
+            { q: "What does a Scatter Plot show?", correct: "Relationship between two numerical variables", wrong: ["Parts of a whole", "Spread and outliers", "Change over time"], exp: "Scatter plots plot dots on X and Y axes to show relationships." },
+            { q: "In a Box Plot, what is a point far from the box called?", correct: "Outlier", wrong: ["Median", "Maximum", "Variance"], exp: "Points outside the whiskers in a box plot are outliers." },
+
+            // Machine Learning Basics
+            { q: "Which library is the main one for Machine Learning tasks?", correct: "scikit-learn", wrong: ["pandas", "matplotlib", "plotly"], exp: "Scikit-learn is the standard ML library in Python." },
+            { q: "Predicting a category/label (e.g., Pass/Fail) is called:", correct: "Classification", wrong: ["Regression", "Clustering", "Generative AI"], exp: "Classification predicts discrete categories." },
+            { q: "Predicting a number (e.g., House Price) is called:", correct: "Regression", wrong: ["Classification", "Clustering", "Segmentation"], exp: "Regression predicts continuous numerical values." },
+            { q: "Which of the following uses labeled data?", correct: "Supervised Learning", wrong: ["Unsupervised Learning", "Clustering", "K-Means"], exp: "Supervised learning uses labels; unsupervised does not." },
+            { q: "Which method is used to TRAIN a model?", correct: "fit()", wrong: ["predict()", "train()", "score()"], exp: "In scikit-learn, model.fit(X, y) trains the model." },
+            { q: "What does `train_test_split` do?", correct: "Splits data into training and test sets", wrong: ["Splits data into rows and columns", "Trains the model", "Evaluates the model"], exp: "It divides your dataset so you can test on unseen data." },
+            { q: "What parameter limits the tree depth in a Decision Tree?", correct: "max_depth", wrong: ["min_depth", "limit_depth", "tree_size"], exp: "max_depth controls how deep the decision tree can grow." },
+
+            // Model Evaluation & Workflow
+            { q: "What is the formula for Recall?", correct: "True positives / all actual positives", wrong: ["True positives / all predicted positives", "True negatives / all actual negatives", "All correct predictions / total predictions"], exp: "Recall focuses on finding all the ACTUAL positives." },
+            { q: "What is the formula for Precision?", correct: "True positives / all predicted positives", wrong: ["True positives / all actual positives", "True negatives / all actual negatives", "All correct predictions / total predictions"], exp: "Precision focuses on how many of your PREDICTIONS were right." },
+            { q: "What summarizes classification results (showing true/false positives/negatives)?", correct: "Confusion Matrix", wrong: ["Grid Search", "Cross-Validation", "Holdout Set"], exp: "A Confusion Matrix is a table showing prediction accuracy." },
+            { q: "What is Grid Search used for?", correct: "Hyperparameter tuning", wrong: ["Evaluating the model", "Splitting data", "Removing missing rows"], exp: "Grid Search tests different parameters to find the best model." },
+            { q: "Why is the Random Seed important?", correct: "Ensures reproducible results", wrong: ["Increases model accuracy", "Speeds up training", "Removes outliers"], exp: "Setting a random seed ensures you get the same random split every time." },
+            { q: "Which dataset is used for tuning during development?", correct: "Validation Set", wrong: ["Holdout Set", "Training Set", "Test Set"], exp: "Validation set is for tuning; Holdout set is for FINAL evaluation." },
+
+            // Business & Real-World Apps
+            { q: "Which algorithm is best for Customer Segmentation?", correct: "Clustering (K-Means)", wrong: ["Linear Regression", "Decision Tree", "Generative AI"], exp: "Segmentation means grouping similar data, which is Clustering." },
+            { q: "Predicting Loan Default is an example of:", correct: "Classification", wrong: ["Regression", "Clustering", "Generative AI"], exp: "Default / No Default are categories, so it's Classification." },
+            { q: "What is a risk of Automated Decisions?", correct: "Can introduce bias/unfair outcomes", wrong: ["Improves efficiency", "Automates repetitive tasks", "Builds trust"], exp: "AI can inherit biases from training data." },
+            { q: "Why do we prefer Simple Models over Complex Models?", correct: "Simple models are easier to understand and maintain", wrong: ["Simple models always have higher accuracy", "Complex models cannot be trained", "Simple models don't need data"], exp: "Simplicity aids in Explainability and maintenance." }
+        ];
+
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // 洗牌函數 (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startQuiz() {
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            // 打亂題目順序
+            currentQuestions = shuffleArray(quizData);
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const qData = currentQuestions[currentQuestionIndex];
+            
+            // 更新進度與分數
+            document.getElementById('progress-text').innerText = `Question ${currentQuestionIndex + 1} / ${currentQuestions.length}`;
+            document.getElementById('score-text').innerText = `Score: ${score}`;
+            
+            // 設置問題
+            document.getElementById('question-text').innerText = qData.q;
+            
+            // 準備並打亂選項
+            const options = shuffleArray([qData.correct, ...qData.wrong]);
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 bg-white font-medium text-gray-700';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(btn, opt, qData.correct, qData.exp);
+                optionsContainer.appendChild(btn);
+            });
+
+            // 隱藏反饋和下一題按鈕
+            document.getElementById('feedback-container').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function checkAnswer(selectedBtn, selectedOpt, correctOpt, explanation) {
+            // 禁用所有按鈕
+            const buttons = document.querySelectorAll('.btn-option');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+                // 標示正確答案
+                if (btn.innerText === correctOpt) {
+                    btn.classList.remove('border-gray-200', 'disabled');
+                    btn.classList.add('correct');
+                }
+            });
+
+            const feedbackContainer = document.getElementById('feedback-container');
+            const feedbackText = document.getElementById('feedback-text');
+            const expText = document.getElementById('explanation-text');
+
+            feedbackContainer.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-800', 'text-red-800');
+
+            if (selectedOpt === correctOpt) {
+                score++;
+                document.getElementById('score-text').innerText = `Score: ${score}`;
+                feedbackContainer.classList.add('bg-green-100', 'text-green-800');
+                feedbackText.innerText = "✅ Correct!";
+            } else {
+                selectedBtn.classList.remove('border-gray-200');
+                selectedBtn.classList.add('wrong');
+                feedbackContainer.classList.add('bg-red-100', 'text-red-800');
+                feedbackText.innerText = "❌ Incorrect!";
+            }
+
+            expText.innerText = explanation;
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+            
+            const percentage = score / currentQuestions.length;
+            let msg = "";
+            if (percentage >= 0.9) msg = "太厲害了！你已經準備好拿 A 啦！🏆";
+            else if (percentage >= 0.7) msg = "做得好！再複習一下錯的題目就穩陣了！💪";
+            else if (percentage >= 0.5) msg = "及格邊緣！請多玩幾次加深記憶！📚";
+            else msg = "革命尚未成功，請繼續瘋狂 Replay 這個測驗！🔥";
+            
+            document.getElementById('result-message').innerText = msg;
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
