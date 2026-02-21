@@ -3,207 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Science with Python - 考前衝刺特訓</title>
+    <title>Data Science with Python - 終極溫習神器</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
-        .btn-option { transition: all 0.2s; }
-        .btn-option:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .option-btn { transition: all 0.2s; }
+        .option-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .correct { background-color: #10b981 !important; color: white !important; border-color: #10b981 !important; }
         .wrong { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
-        .disabled { opacity: 0.7; cursor: not-allowed; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div id="app" class="w-full max-w-2xl bg-white rounded-xl shadow-xl overflow-hidden">
-        <!-- 首頁 -->
-        <div id="home-screen" class="p-8 text-center">
-            <h1 class="text-3xl font-bold text-gray-800 mb-4">Data Science 考前衝刺特訓 🚀</h1>
-            <p class="text-gray-600 mb-8">根據你的 PDF 筆記精煉而成的 MC 題庫。每次選項隨機打亂，反覆練習直到滿分！</p>
-            <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 shadow-lg">
-                開始測驗 (Start Quiz)
+    <div class="max-w-3xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-blue-600 text-white p-6 text-center">
+            <h1 class="text-2xl font-bold mb-2"><i class="fa-solid fa-rocket mr-2"></i>Python 數據科學 - 考前衝刺</h1>
+            <p class="text-blue-100 text-sm">涵蓋 PDF 100% 內容，共 60 題，助你短期記憶所有重點！</p>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="p-8 text-center">
+            <div class="mb-8 text-gray-600 text-left space-y-4">
+                <p><strong>💡 考試秘訣：</strong></p>
+                <ul class="list-disc pl-5 space-y-2 text-sm">
+                    <li><strong>Python 基礎：</strong> 認清符號（// 是整數除法，% 是取餘數）。</li>
+                    <li><strong>Pandas：</strong> 處理數據表（DataFrame）的皇牌，記住 `df.head()`, `df.describe()` 等常用指令。</li>
+                    <li><strong>圖表 (Visualization)：</strong> 記住每種圖的用途（Bar=比較, Hist=分佈, Box=異常值, Line=時間, Scatter=關係）。</li>
+                    <li><strong>機器學習 (ML)：</strong> Classification (分類/標籤) vs Regression (預測數字) vs Clustering (無標籤分組)。</li>
+                </ul>
+            </div>
+            <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105">
+                開始溫習 <i class="fa-solid fa-arrow-right ml-2"></i>
             </button>
         </div>
 
-        <!-- 測驗頁面 -->
+        <!-- Quiz Screen -->
         <div id="quiz-screen" class="hidden p-6 md:p-8">
-            <div class="flex justify-between items-center mb-6 text-sm font-semibold text-gray-500">
-                <span id="progress-text">Question 1 / 35</span>
-                <span id="score-text" class="text-blue-600">Score: 0</span>
+            <div class="flex justify-between items-center mb-6 text-sm text-gray-500 font-semibold">
+                <span id="progress-text">進度: 1 / 60</span>
+                <span id="score-text" class="text-blue-600">分數: 0</span>
             </div>
             
-            <div class="mb-8">
-                <h2 id="question-text" class="text-xl md:text-2xl font-bold text-gray-800 leading-snug">Question text goes here?</h2>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
             </div>
 
-            <div id="options-container" class="space-y-3">
-                <!-- 選項按鈕會由 JS 動態生成 -->
+            <h2 id="question-text" class="text-xl font-bold text-gray-800 mb-6 leading-relaxed"></h2>
+
+            <div id="options-container" class="space-y-3 mb-6">
+                <!-- Options will be generated here -->
             </div>
 
-            <div id="feedback-container" class="hidden mt-6 p-4 rounded-lg">
-                <p id="feedback-text" class="font-bold text-lg mb-1"></p>
-                <p id="explanation-text" class="text-sm text-gray-700"></p>
+            <div id="explanation-container" class="hidden bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
+                <p class="text-sm text-blue-800 font-semibold mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> 解釋：</p>
+                <p id="explanation-text" class="text-sm text-blue-900"></p>
             </div>
 
-            <div class="mt-6 text-right">
-                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
-                    下一題 (Next) ➔
+            <div class="text-right">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded shadow transition">
+                    下一題 <i class="fa-solid fa-chevron-right ml-1"></i>
                 </button>
             </div>
         </div>
 
-        <!-- 結果頁面 -->
+        <!-- Result Screen -->
         <div id="result-screen" class="hidden p-8 text-center">
-            <h2 class="text-3xl font-bold text-gray-800 mb-2">測驗完成！🎉</h2>
-            <p class="text-gray-600 mb-6">你的最終成績：</p>
-            <div class="text-5xl font-black text-blue-600 mb-8" id="final-score">0 / 35</div>
-            <p id="result-message" class="text-lg mb-8 font-medium text-gray-700"></p>
-            <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 shadow-lg">
-                重新挑戰 (Try Again)
+            <i class="fa-solid fa-trophy text-6xl text-yellow-400 mb-4"></i>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">溫習完成！</h2>
+            <p class="text-xl text-gray-600 mb-6">你的得分：<span id="final-score" class="font-bold text-blue-600"></span> / 60</p>
+            
+            <div id="feedback-message" class="mb-8 text-lg font-medium"></div>
+
+            <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition">
+                <i class="fa-solid fa-rotate-right mr-2"></i> 重新溫習
             </button>
         </div>
     </div>
 
     <script>
-        // 題庫 (根據 PDF 內容生成)
-        const quizData = [
-            // Python Basics
-            { q: "What is the output of `3 // 2` in Python?", correct: "1", wrong: ["1.5", "2", "0"], exp: "// is Integer Division. It drops the decimal." },
-            { q: "What does the Modulus operator (`4 % 2`) return?", correct: "0", wrong: ["2", "0.5", "8"], exp: "% returns the remainder of the division." },
-            { q: "Which of the following is a valid variable name in Python?", correct: "value2", wrong: ["2value", "value-2", "value 2"], exp: "Variables cannot start with a number or contain spaces/hyphens." },
-            { q: "What does `type('hello world')` return?", correct: "<class 'str'>", wrong: ["<class 'string'>", "<class 'text'>", "<class 'char'>"], exp: "Text in Python is of type 'str' (string)." },
-            { q: "Which data structure uses curly braces like `{1: 'a', 2: 'b'}`?", correct: "Dictionary", wrong: ["List", "Tuple", "Set"], exp: "Dictionaries use key-value pairs inside {}." },
-            { q: "In Logical Operators, when does `and` return True?", correct: "Only if both conditions are true", wrong: ["If at least one condition is true", "If neither condition is true", "If the first condition is true"], exp: "`and` requires ALL conditions to be True." },
+        // 100% 涵蓋 PDF 內容的題庫 (60題)
+        const allQuestions = [
+            // Page 1: Python Basics
+            { q: "Which of the following is a Valid Variable Name in Python?", options: ["2value", "value 2", "value-2", "value2"], a: 3, exp: "變數名稱必須以字母或底線開頭，不能以數字開頭，也不能包含空格或連字符(hyphens)。" },
+            { q: "What does the following code do? `for i in [1,2,3]: print(i)`", options: ["Prints 1, 2, 3 on the same line", "Prints each number on a new line", "Prints the sum of the numbers", "Causes an error"], a: 1, exp: "For Loop 會遍歷列表，print(i) 預設會將每個數字打印在新的一行。" },
+            { q: "What is the output of Integer Division `3 // 2`?", options: ["1.5", "1", "2", "0.5"], a: 1, exp: "// 是整數除法 (Integer Division)，會捨去小數部分，所以 3 // 2 輸出 1。" },
+            { q: "What does the Modulus Operator `4 % 2` return?", options: ["2", "0.5", "0", "8"], a: 2, exp: "% 是取餘數 (Modulus Operator)，4 除以 2 沒有餘數，所以返回 0。" },
+            { q: "What does the Division `10 / 5` return in Python?", options: ["2", "2.0", "5", "0.5"], a: 1, exp: "單斜線 / 是浮點數除法 (float division)，即使能整除也會返回小數，即 2.0。" },
+            { q: "What is the output of `print(5 + 7)`?", options: ["57", "5 + 7", "12", "Error"], a: 2, exp: "+ 是加法運算符，5 + 7 輸出 12。" },
+            { q: "How do you create a Dictionary in Python?", options: ["dict = [1: 'a', 2: 'b']", "dict = (1: 'a', 2: 'b')", "dict = {1: 'a', 2: 'b'}", "dict = <1: 'a', 2: 'b'>"], a: 2, exp: "字典 (Dictionary) 使用大括號 {}，並以 key: value 的形式儲存。" },
+            { q: "How do you create a List in Python?", options: ["list = {1,2,3}", "list = [1,2,3]", "list = (1,2,3)", "list = <1,2,3>"], a: 1, exp: "列表 (List) 使用方括號 [] 建立。" },
+            { q: "What does `type('hello world')` return?", options: ["<class 'text'>", "<class 'string'>", "<class 'str'>", "<class 'char'>"], a: 2, exp: "字串在 Python 中的類型名稱是 'str'。" },
+            { q: "Which operator is used for Multiplication?", options: ["x", "*", "X", "#"], a: 1, exp: "星號 * 用於乘法。" },
+            { q: "What ensures one branch always executes in Conditional Branching?", options: ["for-loop", "while-loop", "if-else", "try-except"], a: 2, exp: "if-else 確保條件成立時執行 if 分支，不成立時必定執行 else 分支。" },
+            { q: "When does the logical operator `or` return True?", options: ["Only if both conditions are true", "If at least one condition is true", "If both conditions are false", "Only if the first condition is true"], a: 1, exp: "`or` 只要其中一個條件為 True，結果就是 True。" },
+            { q: "When does the logical operator `and` return True?", options: ["If at least one condition is true", "Only if both conditions are true", "If the first condition is true", "If neither condition is true"], a: 1, exp: "`and` 必須兩個條件同時為 True，結果才會是 True。" },
+            { q: "Which of the following is NOT a comparison operator?", options: [">=", "==", "!=", "="], a: 3, exp: "= 是賦值(賦予變數數值)，== 才是用來比較兩個值是否相等。其他比較符包含 >=, <=, >, <, !=" },
+            { q: "In If-Else statements, what is used for multiple conditions?", options: ["else if", "elseif", "elif", "if more"], a: 2, exp: "Python 使用 `elif` 來處理多個條件分支。" },
             
-            // Pandas
-            { q: "Which library is mainly used for tabular data management?", correct: "pandas", wrong: ["scikit-learn", "matplotlib", "plotly"], exp: "Pandas is the standard for tabular data (DataFrames)." },
-            { q: "How do you read a CSV file in pandas?", correct: "pd.read_csv('filename.csv')", wrong: ["pd.open_csv('filename.csv')", "pd.read('filename.csv')", "pd.load_csv('filename.csv')"], exp: "The correct method is pd.read_csv()." },
-            { q: "How do you remove missing rows in a DataFrame?", correct: "df.dropna()", wrong: ["df.fillna()", "df.remove_na()", "df.drop()"], exp: "dropna() drops rows with missing values. fillna() fills them." },
-            { q: "What does `df.shape` give you?", correct: "(rows, columns)", wrong: ["(columns, rows)", "Total number of cells", "Data types of columns"], exp: "shape returns a tuple of (number of rows, number of columns)." },
-            { q: "How do you filter rows where Age is greater than 80?", correct: "df.loc[df['Age'] > 80]", wrong: ["df.filter(Age > 80)", "df['Age'] > 80", "df.where(Age > 80)"], exp: "Use df.loc[] with the condition inside." },
-            { q: "Which method fills NA (missing) values with 0?", correct: "df.fillna(0)", wrong: ["df.dropna(0)", "df.replace_na(0)", "df.insert(0)"], exp: "fillna() is used to replace missing values." },
-            { q: "What does `df.describe()` do?", correct: "Gives numeric summary", wrong: ["Shows data types", "Shows the first 5 rows", "Lists column names"], exp: "describe() provides stats like mean, min, max, etc." },
-            { q: "How do you select multiple columns 'A' and 'B'?", correct: "df[['A','B']]", wrong: ["df['A','B']", "df.select('A','B')", "df['A'] + df['B']"], exp: "You need double brackets [[]] to select multiple columns." },
+            // Page 2: Pandas & Viz Basics
+            { q: "How do you write an Odd/Even Check for a variable `num`?", options: ["if num / 2 == 0:", "if num % 2 == 0:", "if num // 2 == 0:", "if num * 2 == 0:"], a: 1, exp: "使用 `num % 2 == 0` 來檢查餘數是否為 0，如果是則為偶數 (Even)。" },
+            { q: "Which is the Main Library used for tabular data in Python?", options: ["numpy", "matplotlib", "pandas", "scikit-learn"], a: 2, exp: "Pandas 是處理表格數據 (tabular data) 的主要庫。" },
+            { q: "How do you Read a CSV file using pandas?", options: ["pd.open_csv('file.csv')", "pd.read_csv('file.csv')", "pd.load_csv('file.csv')", "pd.import_csv('file.csv')"], a: 1, exp: "使用 `pd.read_csv('filename.csv')` 讀取 CSV 檔案。" },
+            { q: "How do you Select a Column named 'Age' from dataframe `df`?", options: ["df.get('Age')", "df['Age']", "df.column('Age')", "df->Age"], a: 1, exp: "可以寫作 `df['Age']` 或 `df.Age`。" },
+            { q: "How do you Remove Missing Rows in a dataframe?", options: ["df.remove_na()", "df.drop_missing()", "df.dropna()", "df.delete_null()"], a: 2, exp: "使用 `df.dropna()` 來移除包含缺失值的行。" },
+            { q: "How do you Add a Column named 'Total' which is the sum of 'A' and 'B'?", options: ["df['Total'] = df['A'] + df['B']", "df.add('Total') = df['A'] + df['B']", "df.Total = A + B", "df.insert('Total', A+B)"], a: 0, exp: "直接賦值即可：`df['Total'] = df['A'] + df['B']`。" },
+            { q: "How do you get the Mean (average) of the 'Age' column?", options: ["df['Age'].avg()", "df['Age'].mean()", "mean(df['Age'])", "df['Age'].average()"], a: 1, exp: "使用 `.mean()` 方法計算平均值。" },
+            { q: "How do you Set an Index to a column named 'col'?", options: ["df.index('col')", "df.set_index('col')", "df.make_index('col')", "df['col'].set_index()"], a: 1, exp: "使用 `df.set_index('col')`。" },
+            { q: "How do you Filter Rows where 'Age' > 80?", options: ["df.filter(Age > 80)", "df[df.Age > 80]", "df.loc[df['Age'] > 80]", "Both B and C are correct concepts (PDF says df.loc[df['Age'] > 80])"], a: 3, exp: "PDF 筆記中明確寫出：`df.loc[df['Age'] > 80]` 用於過濾行。" },
+            { q: "What does `df.shape` give?", options: ["(columns, rows)", "(rows, columns)", "Total number of cells", "Data types of columns"], a: 1, exp: "`df.shape` 返回一個元組 (rows, columns)，即行數和列數。" },
+            { q: "How do you Group By 'Gender' and sum the 'Sales'?", options: ["df.group('Gender').sum('Sales')", "df.groupby('Gender')['Sales'].sum()", "df.sum('Sales').groupby('Gender')", "df['Sales'].sum().groupby('Gender')"], a: 1, exp: "正確語法是 `df.groupby('Gender')['Sales'].sum()`。" },
+            { q: "Which functions return the First 5 rows and Last 3 rows?", options: ["df.first(), df.last(3)", "df.top(), df.bottom(3)", "df.head(), df.tail(3)", "df.start(), df.end(3)"], a: 2, exp: "`head()` 預設返回前 5 行，`tail(3)` 返回最後 3 行。" },
+            { q: "How do you Select Multiple Columns 'A' and 'B'?", options: ["df['A', 'B']", "df[['A', 'B']]", "df.select('A', 'B')", "df.columns['A', 'B']"], a: 1, exp: "選擇多列需要使用雙重方括號 `df[['A', 'B']]`。" },
+            { q: "How do you check Data Types of a dataframe?", options: ["df.types", "df.datatypes", "df.dtypes", "df.info"], a: 2, exp: "使用 `df.dtypes` 檢查資料類型。" },
+            { q: "How do you Fill NA (missing values) with 0?", options: ["df.fill(0)", "df.replace_na(0)", "df.fillna(0)", "df.na_to_zero()"], a: 2, exp: "使用 `df.fillna(0)` 將缺失值替換為 0。" },
+            { q: "What does `df.describe()` give?", options: ["Column names", "Numeric summary", "Data types", "First 5 rows"], a: 1, exp: "`df.describe()` 提供數值列的統計摘要 (Numeric summary)，如平均值、標準差等。" },
+            
+            // Page 2-3: Visualization
+            { q: "Which are the Main Libraries for plotting/Data Visualization?", options: ["pandas, numpy", "matplotlib, plotly", "scikit-learn, keras", "seaborn, scipy"], a: 1, exp: "PDF 指出 `matplotlib` 和 `plotly` 是主要的繪圖庫。" },
+            { q: "Which chart is used to Compare quantities across categories?", options: ["Line Chart", "Pie Chart", "Bar Chart", "Scatter Plot"], a: 2, exp: "條形圖 (Bar Chart) 適合比較不同類別的數量。" },
+            { q: "Which chart is used to Show distribution of numerical data?", options: ["Histogram", "Pie Chart", "Line Chart", "Box Plot"], a: 0, exp: "直方圖 (Histogram) 用於顯示數值數據的分佈。" },
+            { q: "Which chart is used to Show parts of a whole?", options: ["Scatter Plot", "Bar Chart", "Line Chart", "Pie Chart"], a: 3, exp: "圓餅圖 (Pie Chart) 顯示各部分佔整體的比例 (parts of a whole)。" },
+            { q: "Which chart is used to Show spread and outliers?", options: ["Histogram", "Box Plot", "Scatter Plot", "Line Chart"], a: 1, exp: "箱形圖 (Box Plot) 專門用來顯示數據的分佈範圍 (spread) 和異常值 (outliers)。" },
+            { q: "Which chart is used to Show change over time?", options: ["Bar Chart", "Pie Chart", "Line Chart", "Box Plot"], a: 2, exp: "折線圖 (Line Chart) 最適合顯示隨時間的變化。" },
+            { q: "Which chart is used to Show relationship between two numerical variables?", options: ["Scatter Plot", "Histogram", "Bar Chart", "Pie Chart"], a: 0, exp: "散點圖 (Scatter Plot) 用於顯示兩個數值變數之間的關係。" },
+            { q: "What should you consider first when Choosing Chart Type?", options: ["Colors and fonts", "Data type and message", "Size of the dataset", "The library used"], a: 1, exp: "選擇圖表類型時，首先要考慮「數據類型」和你想傳達的「信息」(Data type and message first)。" },
+            { q: "In a Box Plot, what is a point far from the box called?", options: ["Median", "Quartile", "Outlier", "Variance"], a: 2, exp: "遠離箱體的點被稱為異常值 (Outlier)。" },
+            { q: "What helps interpret groups in data?", options: ["Clustering Visualization", "Line Chart", "Pie Chart", "Histogram"], a: 0, exp: "聚類視覺化 (Clustering Visualization) 有助於解釋和理解數據分組。" },
+            { q: "What are Best Practices for clarity in visualization?", options: ["Use 3D effects", "Add clear titles, axis labels, and legends", "Use as many colors as possible", "Remove all text"], a: 1, exp: "最佳實踐是加入清晰的標題、坐標軸標籤和圖例 (titles, axis labels, legends)。" },
 
-            // Data Visualization
-            { q: "Which chart is best to show the distribution of numerical data?", correct: "Histogram", wrong: ["Bar Chart", "Pie Chart", "Line Chart"], exp: "Histograms show distributions, Bar charts compare categories." },
-            { q: "Which chart is best to show change over time?", correct: "Line Chart", wrong: ["Scatter Plot", "Box Plot", "Pie Chart"], exp: "Line charts are standard for time-series data." },
-            { q: "What does a Scatter Plot show?", correct: "Relationship between two numerical variables", wrong: ["Parts of a whole", "Spread and outliers", "Change over time"], exp: "Scatter plots plot dots on X and Y axes to show relationships." },
-            { q: "In a Box Plot, what is a point far from the box called?", correct: "Outlier", wrong: ["Median", "Maximum", "Variance"], exp: "Points outside the whiskers in a box plot are outliers." },
+            // Page 3: Machine Learning Basics
+            { q: "Which is the Main Library for ML tasks in Python?", options: ["pandas", "matplotlib", "scikit-learn", "numpy"], a: 2, exp: "`scikit-learn` 是 Python 中最常用的機器學習庫。" },
+            { q: "Which ML task Predicts a category/label (e.g., Decision Tree Classifier)?", options: ["Regression", "Clustering", "Classification", "Dimensionality Reduction"], a: 2, exp: "分類 (Classification) 用於預測類別或標籤。" },
+            { q: "Which ML task Predicts a number (e.g., Linear Regression)?", options: ["Classification", "Clustering", "Regression", "Segmentation"], a: 2, exp: "回歸 (Regression) 用於預測連續的數值。" },
+            { q: "Which ML task Groups similar data points (e.g., K-Means)?", options: ["Classification", "Regression", "Clustering", "Supervised Learning"], a: 2, exp: "聚類 (Clustering) 將相似的數據點分組。" },
+            { q: "Which type of learning Uses labeled data?", options: ["Unsupervised Learning", "Supervised Learning", "Reinforcement Learning", "Deep Learning"], a: 1, exp: "監督式學習 (Supervised Learning) 使用帶有標籤 (labeled) 的數據。" },
+            { q: "Which type of learning has No labels (e.g., K-Means)?", options: ["Supervised Learning", "Unsupervised Learning", "Classification", "Regression"], a: 1, exp: "非監督式學習 (Unsupervised Learning) 處理沒有標籤的數據。" },
+            { q: "Which method Trains a model in scikit-learn?", options: ["train()", "fit()", "predict()", "build()"], a: 1, exp: "`fit()` 方法用於訓練模型。" },
+            { q: "Which method Makes predictions in scikit-learn?", options: ["guess()", "evaluate()", "predict()", "test()"], a: 2, exp: "`predict()` 方法用於進行預測。" },
+            { q: "What does `train_test_split` do?", options: ["Combines datasets", "Splits data into training and test sets", "Trains the model automatically", "Cleans the data"], a: 1, exp: "它將數據集分割成訓練集 (training set) 和測試集 (test set)。" },
+            { q: "What limits tree depth in a Decision Tree?", options: ["min_samples", "max_features", "max_depth", "tree_size"], a: 2, exp: "`max_depth` 參數用來限制決策樹的深度。" },
+            { q: "Which model is known to be easy to interpret?", options: ["Neural Networks", "Decision Trees", "Support Vector Machines", "Random Forest"], a: 1, exp: "決策樹 (Decision Trees) 的優點之一是易於解釋 (Interpretability)。" },
+            { q: "What does Linear Regression do?", options: ["Groups customers", "Fits a straight line to data", "Builds a tree of decisions", "Classifies images"], a: 1, exp: "線性回歸 (Linear Regression) 透過擬合一條直線 (straight line) 來預測數據。" },
+            { q: "What is a common Use Case for Clustering?", options: ["Predicting house prices", "Grouping customers by behavior", "Predicting loan default", "Image recognition"], a: 1, exp: "根據行為將客戶分組 (Grouping customers by behavior) 是聚類的典型應用。" },
 
-            // Machine Learning Basics
-            { q: "Which library is the main one for Machine Learning tasks?", correct: "scikit-learn", wrong: ["pandas", "matplotlib", "plotly"], exp: "Scikit-learn is the standard ML library in Python." },
-            { q: "Predicting a category/label (e.g., Pass/Fail) is called:", correct: "Classification", wrong: ["Regression", "Clustering", "Generative AI"], exp: "Classification predicts discrete categories." },
-            { q: "Predicting a number (e.g., House Price) is called:", correct: "Regression", wrong: ["Classification", "Clustering", "Segmentation"], exp: "Regression predicts continuous numerical values." },
-            { q: "Which of the following uses labeled data?", correct: "Supervised Learning", wrong: ["Unsupervised Learning", "Clustering", "K-Means"], exp: "Supervised learning uses labels; unsupervised does not." },
-            { q: "Which method is used to TRAIN a model?", correct: "fit()", wrong: ["predict()", "train()", "score()"], exp: "In scikit-learn, model.fit(X, y) trains the model." },
-            { q: "What does `train_test_split` do?", correct: "Splits data into training and test sets", wrong: ["Splits data into rows and columns", "Trains the model", "Evaluates the model"], exp: "It divides your dataset so you can test on unseen data." },
-            { q: "What parameter limits the tree depth in a Decision Tree?", correct: "max_depth", wrong: ["min_depth", "limit_depth", "tree_size"], exp: "max_depth controls how deep the decision tree can grow." },
+            // Page 4: Model Evaluation & Workflow
+            { q: "What is the formula for Recall?", options: ["True positives / all predicted positives", "True positives / all actual positives", "False positives / True negatives", "True negatives / all actual negatives"], a: 1, exp: "召回率 (Recall) = True positives / all actual positives。" },
+            { q: "What is the formula for Precision?", options: ["True positives / all predicted positives", "True positives / all actual positives", "False positives / True negatives", "True negatives / all actual negatives"], a: 0, exp: "精確度 (Precision) = True positives / all predicted positives。" },
+            { q: "What Summarizes classification results?", options: ["Scatter Plot", "Confusion Matrix", "Grid Search", "Cross-Validation"], a: 1, exp: "混淆矩陣 (Confusion Matrix) 用於總結分類模型的預測結果。" },
+            { q: "What Assesses a model on multiple data splits (e.g., k-fold)?", options: ["Holdout Set", "Grid Search", "Cross-Validation", "Feature Selection"], a: 2, exp: "交叉驗證 (Cross-Validation) 在多個數據分割上評估模型。" },
+            { q: "What is Grid Search used for?", options: ["Data cleaning", "Hyperparameter tuning", "Feature selection", "Plotting graphs"], a: 1, exp: "網格搜索 (Grid Search) 用於超參數調優 (Hyperparameter tuning)。" },
+            { q: "What is the Holdout Set used for?", options: ["Training the model", "Tuning during development", "Final evaluation", "Feature selection"], a: 2, exp: "Holdout Set 專門用於模型的最終評估 (Final evaluation)。" },
+            { q: "What is the Validation Set used for?", options: ["Final evaluation", "Tuning during development", "Training the model", "Data cleaning"], a: 1, exp: "驗證集 (Validation Set) 用於開發過程中的調優 (Tuning during development)。" },
+            { q: "What Ensures reproducible results?", options: ["Cross-Validation", "Importance of Random Seed", "Feature Selection", "Grid Search"], a: 1, exp: "設定隨機種子 (Random Seed) 可以確保每次運行的結果一致 (reproducible results)。" },
+            { q: "What Removes unnecessary features?", options: ["Grid Search", "Cross-Validation", "Feature Selection", "Data Imputation"], a: 2, exp: "特徵選擇 (Feature Selection) 的目的是移除不必要的特徵。" },
+            { q: "What is the Final Goal of a data science project?", options: ["Just build a model", "Deploy a useful solution or insight", "Get 100% accuracy", "Use complex algorithms"], a: 1, exp: "最終目標是部署一個有用的解決方案或見解 (Deploy a useful solution or insight)，而不僅僅是建立模型。" },
+            { q: "Why do we Evaluate on Unseen Data?", options: ["To train faster", "To ensure generalization", "To increase bias", "To tune parameters"], a: 1, exp: "在未見過的數據上評估可以確保模型的泛化能力 (Ensures generalization)。" },
 
-            // Model Evaluation & Workflow
-            { q: "What is the formula for Recall?", correct: "True positives / all actual positives", wrong: ["True positives / all predicted positives", "True negatives / all actual negatives", "All correct predictions / total predictions"], exp: "Recall focuses on finding all the ACTUAL positives." },
-            { q: "What is the formula for Precision?", correct: "True positives / all predicted positives", wrong: ["True positives / all actual positives", "True negatives / all actual negatives", "All correct predictions / total predictions"], exp: "Precision focuses on how many of your PREDICTIONS were right." },
-            { q: "What summarizes classification results (showing true/false positives/negatives)?", correct: "Confusion Matrix", wrong: ["Grid Search", "Cross-Validation", "Holdout Set"], exp: "A Confusion Matrix is a table showing prediction accuracy." },
-            { q: "What is Grid Search used for?", correct: "Hyperparameter tuning", wrong: ["Evaluating the model", "Splitting data", "Removing missing rows"], exp: "Grid Search tests different parameters to find the best model." },
-            { q: "Why is the Random Seed important?", correct: "Ensures reproducible results", wrong: ["Increases model accuracy", "Speeds up training", "Removes outliers"], exp: "Setting a random seed ensures you get the same random split every time." },
-            { q: "Which dataset is used for tuning during development?", correct: "Validation Set", wrong: ["Holdout Set", "Training Set", "Test Set"], exp: "Validation set is for tuning; Holdout set is for FINAL evaluation." },
-
-            // Business & Real-World Apps
-            { q: "Which algorithm is best for Customer Segmentation?", correct: "Clustering (K-Means)", wrong: ["Linear Regression", "Decision Tree", "Generative AI"], exp: "Segmentation means grouping similar data, which is Clustering." },
-            { q: "Predicting Loan Default is an example of:", correct: "Classification", wrong: ["Regression", "Clustering", "Generative AI"], exp: "Default / No Default are categories, so it's Classification." },
-            { q: "What is a risk of Automated Decisions?", correct: "Can introduce bias/unfair outcomes", wrong: ["Improves efficiency", "Automates repetitive tasks", "Builds trust"], exp: "AI can inherit biases from training data." },
-            { q: "Why do we prefer Simple Models over Complex Models?", correct: "Simple models are easier to understand and maintain", wrong: ["Simple models always have higher accuracy", "Complex models cannot be trained", "Simple models don't need data"], exp: "Simplicity aids in Explainability and maintenance." }
+            // Page 4: Business & Real-World Applications
+            { q: "Churn Prediction is an example of which task?", options: ["Regression", "Clustering", "Classification - Decision Tree", "Generative AI"], a: 2, exp: "客戶流失預測 (Churn Prediction) 是一個分類問題，常使用決策樹。" },
+            { q: "House Price Prediction is an example of which task?", options: ["Classification", "Regression - Linear Regression", "Clustering", "Unsupervised Learning"], a: 1, exp: "房價預測是預測一個數值，屬於回歸問題 (Regression)。" },
+            { q: "Customer Segmentation is an example of which task?", options: ["Classification", "Regression", "Clustering (K-Means)", "Supervised Learning"], a: 2, exp: "客戶細分是將客戶分組，屬於聚類問題 (Clustering)。" },
+            { q: "What is used for generating new content (e.g., images from text)?", options: ["Linear Regression", "Generative AI", "K-Means", "Decision Tree"], a: 1, exp: "生成式 AI (Generative AI) 用於生成新內容。" },
+            { q: "Which of the following is a Constraint in ML?", options: ["Data privacy", "Need for interpretability", "Limited labeled data & computational resources", "All of the above"], a: 3, exp: "PDF 列出的限制包括：數據隱私、解釋性需求、有限的標籤數據和計算資源。" },
+            { q: "What is a common Data Challenge?", options: ["Too much accuracy", "Data may be missing or incorrect", "Models are too simple", "Computers are too fast"], a: 1, exp: "數據可能缺失或不正確 (missing or incorrect) 是常見挑戰。" },
+            { q: "What does Model Validation check?", options: ["If data is missing", "If model generalizes to new data", "If the code has syntax errors", "If the random seed is set"], a: 1, exp: "模型驗證檢查模型是否能泛化到新數據 (generalizes to new data)。" },
+            { q: "Which of the following is an Ethics risk in AI?", options: ["Bias and unfair outcomes", "Fake news/deepfakes", "Both A and B", "High computational cost"], a: 2, exp: "倫理風險包括偏見、不公平結果以及假新聞/深度偽造。" },
+            { q: "What does Responsible AI involve?", options: ["Monitor for fairness", "Explain predictions", "Get consent", "All of the above"], a: 3, exp: "負責任的 AI 需要監控公平性、解釋預測並獲得同意。" },
+            { q: "Why might you choose Simple models over Complex Models?", options: ["They are more accurate", "Simple models are easier to understand and maintain", "They use more computational resources", "They don't need data"], a: 1, exp: "簡單模型更容易理解和維護 (easier to understand and maintain)。" },
+            { q: "What is a Healthcare Benefit of ML?", options: ["Automate repetitive tasks", "Predict patient risks, improve care", "Generate images", "Customer segmentation"], a: 1, exp: "在醫療保健中，ML 可以預測患者風險並改善護理。" },
+            { q: "What is a Risk of Automated Decisions?", options: ["Improves efficiency", "Can introduce bias/unfair outcomes", "Builds trust", "Reduces computational resources"], a: 1, exp: "自動化決策可能會引入偏見或不公平的結果。" },
+            { q: "What does AI in Business do?", options: ["Predicts patient risks", "Automates repetitive tasks, improves efficiency", "Generates fake news", "Creates deepfakes"], a: 1, exp: "在商業中，AI 自動化重複性任務並提高效率。" },
+            
+            // Page 5: Explainability & Code Reference
+            { q: "What Builds trust with stakeholders?", options: ["Complex models", "Black box algorithms", "Explainability", "Ignoring data privacy"], a: 2, exp: "可解釋性 (Explainability) 能與利益相關者建立信任。" },
+            { q: "In the code `model = LinearRegression()`, what is being done?", options: ["Training the model", "Making predictions", "Initializing the model", "Splitting the data"], a: 2, exp: "這行代碼是初始化 (建立) 一個線性回歸模型物件。" },
+            { q: "In the code `model.fit(X_train, y_train)`, what is being done?", options: ["Predicting", "Training the model", "Splitting data", "Evaluating"], a: 1, exp: "`.fit()` 配合訓練數據 (X_train, y_train) 是用來訓練 (Train) 模型。" },
+            { q: "In the code `predictions = model.predict(X_test)`, what is being done?", options: ["Training", "Evaluating", "Making predictions on test data", "Splitting data"], a: 2, exp: "`.predict(X_test)` 使用訓練好的模型對測試數據進行預測 (Predict)。" }
         ];
 
         let currentQuestions = [];
         let currentQuestionIndex = 0;
         let score = 0;
+        let answered = false;
 
-        // 洗牌函數 (Fisher-Yates Shuffle)
-        function shuffleArray(array) {
-            const arr = [...array];
-            for (let i = arr.length - 1; i > 0; i--) {
+        // Shuffle array function
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
+                [array[i], array[j]] = [array[j], array[i]];
             }
-            return arr;
+            return array;
         }
 
         function startQuiz() {
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
             
-            // 打亂題目順序
-            currentQuestions = shuffleArray(quizData);
+            // Use all questions, but shuffle their order
+            currentQuestions = shuffle([...allQuestions]);
             currentQuestionIndex = 0;
             score = 0;
-            
+            updateScore();
             loadQuestion();
         }
 
         function loadQuestion() {
-            const qData = currentQuestions[currentQuestionIndex];
+            answered = false;
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('explanation-container').classList.add('hidden');
             
-            // 更新進度與分數
-            document.getElementById('progress-text').innerText = `Question ${currentQuestionIndex + 1} / ${currentQuestions.length}`;
-            document.getElementById('score-text').innerText = `Score: ${score}`;
+            const q = currentQuestions[currentQuestionIndex];
+            document.getElementById('question-text').innerHTML = `<span class="text-blue-600 mr-2">Q${currentQuestionIndex + 1}.</span> ` + q.q.replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-red-500 px-1 rounded">$1</code>');
             
-            // 設置問題
-            document.getElementById('question-text').innerText = qData.q;
-            
-            // 準備並打亂選項
-            const options = shuffleArray([qData.correct, ...qData.wrong]);
-            
+            document.getElementById('progress-text').innerText = `進度: ${currentQuestionIndex + 1} / ${currentQuestions.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex) / currentQuestions.length) * 100}%`;
+
             const optionsContainer = document.getElementById('options-container');
             optionsContainer.innerHTML = '';
-            
-            options.forEach(opt => {
+
+            q.options.forEach((opt, index) => {
                 const btn = document.createElement('button');
-                btn.className = 'btn-option w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 bg-white font-medium text-gray-700';
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(btn, opt, qData.correct, qData.exp);
+                btn.className = 'option-btn w-full text-left p-4 border-2 border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-blue-50 hover:border-blue-300 focus:outline-none';
+                // Handle code formatting in options
+                btn.innerHTML = `<span class="inline-block w-6 font-bold text-gray-400">${String.fromCharCode(65 + index)}.</span> ` + opt.replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-red-500 px-1 rounded">$1</code>');
+                btn.onclick = () => checkAnswer(index, btn);
                 optionsContainer.appendChild(btn);
             });
-
-            // 隱藏反饋和下一題按鈕
-            document.getElementById('feedback-container').classList.add('hidden');
-            document.getElementById('next-btn').classList.add('hidden');
         }
 
-        function checkAnswer(selectedBtn, selectedOpt, correctOpt, explanation) {
-            // 禁用所有按鈕
-            const buttons = document.querySelectorAll('.btn-option');
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.classList.add('disabled');
-                // 標示正確答案
-                if (btn.innerText === correctOpt) {
-                    btn.classList.remove('border-gray-200', 'disabled');
-                    btn.classList.add('correct');
-                }
-            });
+        function checkAnswer(selectedIndex, btn) {
+            if (answered) return;
+            answered = true;
 
-            const feedbackContainer = document.getElementById('feedback-container');
-            const feedbackText = document.getElementById('feedback-text');
-            const expText = document.getElementById('explanation-text');
+            const q = currentQuestions[currentQuestionIndex];
+            const buttons = document.querySelectorAll('.option-btn');
 
-            feedbackContainer.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-800', 'text-red-800');
+            // Disable all buttons
+            buttons.forEach(b => b.disabled = true);
 
-            if (selectedOpt === correctOpt) {
+            if (selectedIndex === q.a) {
+                btn.classList.add('correct');
                 score++;
-                document.getElementById('score-text').innerText = `Score: ${score}`;
-                feedbackContainer.classList.add('bg-green-100', 'text-green-800');
-                feedbackText.innerText = "✅ Correct!";
+                updateScore();
             } else {
-                selectedBtn.classList.remove('border-gray-200');
-                selectedBtn.classList.add('wrong');
-                feedbackContainer.classList.add('bg-red-100', 'text-red-800');
-                feedbackText.innerText = "❌ Incorrect!";
+                btn.classList.add('wrong');
+                buttons[q.a].classList.add('correct');
             }
 
-            expText.innerText = explanation;
+            // Show explanation
+            document.getElementById('explanation-text').innerText = q.exp;
+            document.getElementById('explanation-container').classList.remove('hidden');
+            
+            // Show next button
             document.getElementById('next-btn').classList.remove('hidden');
         }
 
@@ -216,26 +269,34 @@
             }
         }
 
+        function updateScore() {
+            document.getElementById('score-text').innerText = `分數: ${score}`;
+        }
+
         function showResults() {
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
             
-            document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+            document.getElementById('final-score').innerText = score;
             
+            const feedback = document.getElementById('feedback-message');
             const percentage = score / currentQuestions.length;
-            let msg = "";
-            if (percentage >= 0.9) msg = "太厲害了！你已經準備好拿 A 啦！🏆";
-            else if (percentage >= 0.7) msg = "做得好！再複習一下錯的題目就穩陣了！💪";
-            else if (percentage >= 0.5) msg = "及格邊緣！請多玩幾次加深記憶！📚";
-            else msg = "革命尚未成功，請繼續瘋狂 Replay 這個測驗！🔥";
             
-            document.getElementById('result-message').innerText = msg;
+            if (percentage >= 0.9) {
+                feedback.innerHTML = '<span class="text-green-600">太神了！你已經完全掌握了所有重點，考試絕對沒問題！🎉</span>';
+            } else if (percentage >= 0.7) {
+                feedback.innerHTML = '<span class="text-blue-600">做得好！大部分內容都記住了，再刷一次錯題就完美了！💪</span>';
+            } else if (percentage >= 0.5) {
+                feedback.innerHTML = '<span class="text-yellow-600">及格邊緣！你已經有基本概念，但還需要多加練習加深記憶！📚</span>';
+            } else {
+                feedback.innerHTML = '<span class="text-red-600">革命尚未成功！不要灰心，這份測驗就是設計來讓你死記硬背的，再玩幾次一定行！🔥</span>';
+            }
         }
 
         function restartQuiz() {
+            document.getElementById('result-screen').classList.add('hidden');
             startQuiz();
         }
     </script>
 </body>
-
 </html>
